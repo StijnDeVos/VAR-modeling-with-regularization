@@ -63,6 +63,8 @@ Note that when we include more lags in the model, we have multiple regression co
  
 When we fit a VAR model, we are trying to find values for the elements of these matrices.
 
-## Regularization
+## What is regularization?
+
+
 
 ## Conclusion
