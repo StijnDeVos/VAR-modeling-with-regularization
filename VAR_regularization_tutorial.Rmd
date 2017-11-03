@@ -49,7 +49,7 @@ x_{4(t-1)} \\
 
 Or, even more convenient: $$X_t = AX_{t-1} + \epsilon_t$$ You will have to take my word for it that this represents the same system of equations as written earlier. If you don't, or feel particularly bored, you can try looking up the [Wikipedia page on matrix operations](https://en.wikipedia.org/wiki/Matrix_(mathematics)#Basic_operations) and confirm it for yourself!
 
-The vector $\epsilon_t$ is comprised of four random variables, each with a normal distribution. Another way of saying this is that epsilon is distributed according to a *multivariate* normal distribution with mean vector $(0,0,0,0)$ and covariance matrix $$\Sigma = \begin{bmatrix}
+The vector $\epsilon_t$ is comprised of four random variables, each with a normal distribution. Another way of saying this is that $\epsilon_t$ is distributed according to a *multivariate* normal distribution with mean vector $(0,0,0,0)$ and covariance matrix $$\Sigma = \begin{bmatrix}
 \sigma_{11} & \sigma_{12} & \sigma_{13} & \sigma_{14}\\ 
 \sigma_{21} & \sigma_{22} & \sigma_{23} & \sigma_{24}\\ 
 \sigma_{31} & \sigma_{32} & \sigma_{33} & \sigma_{34}\\ 
