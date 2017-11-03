@@ -67,6 +67,5 @@ When we fit a VAR model, we are trying to find values for the elements of these 
 
 Before discussing regularization, we briefly reconsider maximum likelihood estimation. Suppose we have a dataset of observations of independent variables $x_1$, $x_2$ and a response variable $y$. 
 
+## The SparseTSCGM package
 
-
-## Conclusion
