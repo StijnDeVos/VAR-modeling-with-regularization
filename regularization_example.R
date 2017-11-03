@@ -13,3 +13,4 @@ X = matrix(NA, ncol = 2, nrow = 100)
 X[, 1] <- data$x1
 X[, 2] <- data$x2
 penalized_lm <- glmnet(x = X, y)
+cv <- cv.glmnet(x = X, y = y)
