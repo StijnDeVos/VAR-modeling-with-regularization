@@ -2,10 +2,12 @@
 title: "VAR modeling, regularization and the SparseTSCGM package"
 author: "Stijn de Vos"
 date: "03 - 11 - 2017"
+header-includes:
+  - \usepackage{mathtools}
 output:
-  pdf_document: default
   html_document:
     theme: cerulean
+  pdf_document: default
 ---
 
 We start with a small review of vector-autoregressive models. Afterwards, regularization is discussed and the SparseTSCGM package is demonstrated.
@@ -25,27 +27,27 @@ x_{4t} &= a_{41} x_{1(t-1)}+a_{42}x_{2(t-1)}+a_{43}x_{3(t-1)}+a_{44}x_{4(t-1)}+\
 
 The numbers $a_{ij}$ are the regression coefficients of the VAR model. The terms $\epsilon_{it}$ represent the (contemporaneous) noise at time $t$. VAR models usually assume that $\epsilon_{it}$ is normally distributed with mean 0 and some standard deviation: $\epsilon_{it} \sim \mathcal{N}(0, \sigma_i)$. 
 
-This all looks very nasty and complicated. Luckily, using vector notation, we can abbreviate the model description quite a bit. Using the vector notation we can write $$\begin{bmatrix}
+This all looks very nasty and complicated. Luckily, using vector notation, we can abbreviate the model description quite a bit. Using the vector notation we can write $$\overbrace{\begin{bmatrix}
 x_{1t} \\ 
 x_{2t} \\ 
 x_{3t} \\ 
 x_{4t} \\ 
-\end{bmatrix} = \begin{bmatrix}
+\end{bmatrix}}^{X_t} = \overbrace{\begin{bmatrix}
 a_{11} & a_{12} & a_{13} & a_{14}\\ 
 a_{21} & a_{22} & a_{23} & a_{24}\\ 
 a_{31} & a_{32} & a_{33} & a_{34}\\ 
 a_{41} & a_{42} & a_{43} & a_{44}\\ 
-\end{bmatrix}\begin{bmatrix}
+\end{bmatrix}}^{A}\overbrace{\begin{bmatrix}
 x_{1(t-1)} \\ 
 x_{2(t-1)} \\ 
 x_{3(t-1)} \\ 
 x_{4(t-1)} \\ 
-\end{bmatrix} + \begin{bmatrix}
+\end{bmatrix}}^{X_{t-1}} + \overbrace{\begin{bmatrix}
 \epsilon_{1t} \\ 
 \epsilon_{2t} \\ 
 \epsilon_{3t} \\ 
 \epsilon_{4t} \\ 
-\end{bmatrix}$$
+\end{bmatrix}}^{\epsilon_t}$$
 
 Or, even more convenient: $$X_t = AX_{t-1} + \epsilon_t$$ You will have to take my word for it that this represents the same system of equations as written earlier. If you don't, or feel particularly bored, you can try looking up the [Wikipedia page on matrix operations](https://en.wikipedia.org/wiki/Matrix_(mathematics)#Basic_operations) and confirm it for yourself!
 
@@ -56,7 +58,10 @@ The vector $\epsilon_t$ is comprised of four random variables, each with a norma
 \sigma_{41} & \sigma_{42} & \sigma_{43} & \sigma_{44}\\ 
 \end{bmatrix}$$
 
-Note that when we include more lags in the model, we have multiple regression coefficient matrices. For the sake of easy exposition, we stick to the lag-1 model for now. The most important important sets of parameters of this model are
+Note that when we include more lags in the model, we have multiple regression coefficient matrices. For example, a lag-3 model looks like this:
+
+$$X_t = A_1 X_{t-1} + A_2 X_{t-2} + A_3 X_{t-3} + \epsilon_t$$
+For the sake of easy exposition, we stick to the lag-1 model. The most important important sets of parameters of this model are
 
  * $A$, the matrix of regression coefficients, representing the associations between specific items over time;
  * $\Sigma$, the covariance matrix, representing variability of contemporaneous noise at each measurement.
@@ -65,7 +70,7 @@ When we fit a VAR model, we are trying to find values for the elements of these 
 
 ## What is regularization?
 
-Before discussing regularization, we briefly reconsider maximum likelihood estimation. Suppose we have a dataset of observations of independent variables $x_1$, $x_2$ and a response variable $y$. 
+Before discussing regularization, we briefly reconsider maximum likelihood estimation. Suppose we have a dataset of observations of independent variables $x_1$, $x_2$ and a response variable $y$. A simple linear regression model looks like this: $$y = ax_1 + bx_2 + \epsilon.$$ A typical approach to estimating the model parameters $a, b$ is Maximum Likelihood Estimation (MLE). Likelihood is a function of the model parameters and is defined as $L(a, b | X) = P(X | a, b)$, which means that the *likelihood of model parameters $a$ and $b$* is defined as the probability of observing the data $X$, given some values for $a$ and $b$. MLE finds estimations for the model parameters by calculating for which $a$ and $b$ the likelihood function is maximized. 
 
 ## The SparseTSCGM package
 
