@@ -4,11 +4,19 @@ author: "Stijn de Vos"
 date: "03 - 11 - 2017"
 header-includes:
   - \usepackage{mathtools}
+  - \usepackage{color}
 output:
   html_document:
     theme: cerulean
   pdf_document: default
 ---
+
+
+```{r}
+x <- rnorm(100)
+y <- rnorm(100)
+plot(x, y)
+```
 
 We start with a small review of vector-autoregressive models. Afterwards, regularization is discussed and the SparseTSCGM package is demonstrated.
 
@@ -70,6 +78,15 @@ When we fit a VAR model, we are trying to find values for the elements of these 
 
 ## What is regularization?
 
-Before discussing regularization, we briefly reconsider maximum likelihood estimation. Suppose we have a dataset of observations of independent variables $x_1$, $x_2$ and a response variable $y$. A simple linear regression model looks like this: $$y = ax_1 + bx_2 + \epsilon.$$ A typical approach to estimating the model parameters $a, b$ is Maximum Likelihood Estimation (MLE). Likelihood is a function of the model parameters and is defined as $L(a, b | X) = P(X | a, b)$, which means that the *likelihood of model parameters $a$ and $b$* is defined as the probability of observing the data $X$, given some values for $a$ and $b$. MLE finds estimations for the model parameters by calculating for which $a$ and $b$ the likelihood function is maximized.
+Before discussing regularization, we briefly reconsider the likelihood function and maximum likelihood estimation. Suppose we have a dataset of observations of independent variables $x_1$, $x_2$ and a response variable $y$. A simple linear regression model looks like this: $$y = ax_1 + bx_2 + \epsilon.$$ Maximum Likelihood Estimation (MLE) is a typical approach to estimating the model parameters $a, b$. Likelihood is a function of the model parameters and is defined as $L(a, b | X) = P(X | a, b)$, which means that the *likelihood of model parameters $a$ and $b$* is defined as the probability of observing the data $X$, given some values for $a$ and $b$. MLE finds estimations for the model parameters by calculating for which $a$ and $b$ the likelihood function is maximized.
+
+Now suppose that we have a regression problem where there are more variables in the model than there are observations. This is a problem, since there is not enough information available to estimate all the parameters in the model. In this case, it is hard or impossible to find the best value for $a$ and $b$ based on MLE, i.e. it is not possible to find values for $a$ and $b$ such that the likelihood function $L(a, b | X)$ is maximized. This is one of the prime examples where regularization saves the day. Instead of estimating the model parameters by maximizing the likelihood function, we add an extra term to the likelihood function: $$L_{\text{pen}}(a, b | X) = L(a,b|X) + \lambda \text{Pen}(a, b).$$ Here, ``Pen'' is short for penalty. This is a mathematical function that gets larger if the model parameters get bigger. 
+
+ - idea is that we can maximize this function instead of $L$
+ - its like adding 'extra information'
+ - there are many different penalty functions. some of of the most common are lasso, ridge regression, etc.
+ - these functions have different properties (L1 vs L2)
+ - we now continue with regularization + VAR models
 
 ## The SparseTSCGM package
+
