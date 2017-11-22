@@ -1,0 +1,85 @@
+---
+title: "VAR modeling, regularization and the SparseTSCGM package"
+author: "Stijn de Vos"
+date: "03 - 11 - 2017"
+output:
+  html_document:
+    theme: cerulean
+    highlight: tango
+header-includes:
+- \usepackage{mathtools}
+- \usepackage{color}
+---
+
+We start with a small review of vector-autoregressive models. Afterwards, regularization is discussed and the SparseTSCGM package is demonstrated.
+
+## Introduction
+
+Suppose we have four items called 'Positive Affect' ($x_1$), 'Anhedonia' ($x_2$), 'Irritability' ($x_3$) and 'Weightloss' ($x_4$). Measuring these items multiple times gives a time-series dataset where each observation consists of four elements. Written mathematically, the observation at time $t$ consists of four numbers $(x_{1t}, x_{2t}, x_{3t}, x_{4t})$. As a shorthand notation, people often write $X_t = (x_{1t}, x_{2t}, x_{3t}, x_{4t})$. $X_t$ is called a (four-dimensional) *vector*.
+
+This is why it's called **vector**-autoregressive (VAR) modeling; we regress a vector $X_t$ on past `versions' of itself, instead of a single variable. The simplest VAR model only regresses $X_t$ on its previous measurement $X_{t-1}$. This VAR model is said to have a **lag** of 1. In formula form, this model looks as follows:
+
+\begin{align*}
+x_{1t} &= a_{11} x_{1(t-1)}+a_{12}x_{2(t-1)}+a_{13}x_{3(t-1)}+a_{14}x_{4(t-1)}+\epsilon_{1t}\\
+x_{2t} &= a_{21} x_{1(t-1)}+a_{22}x_{2(t-1)}+a_{23}x_{3(t-1)}+a_{24}x_{4(t-1)}+\epsilon_{2t}\\
+x_{3t} &= a_{31} x_{1(t-1)}+a_{32}x_{2(t-1)}+a_{33}x_{3(t-1)}+a_{34}x_{4(t-1)}+\epsilon_{3t}\\
+x_{4t} &= a_{41} x_{1(t-1)}+a_{42}x_{2(t-1)}+a_{43}x_{3(t-1)}+a_{44}x_{4(t-1)}+\epsilon_{4t}
+\end{align*}
+
+The numbers $a_{ij}$ are the regression coefficients of the VAR model. The terms $\epsilon_{it}$ represent the (contemporaneous) noise at time $t$. VAR models usually assume that $\epsilon_{it}$ is normally distributed with mean 0 and some standard deviation: $\epsilon_{it} \sim \mathcal{N}(0, \sigma_i)$.
+
+This all looks very nasty and complicated. Luckily, using vector notation, we can abbreviate the model description quite a bit. Using the vector notation we can write $$\overbrace{\begin{bmatrix}
+x_{1t} \\
+x_{2t} \\
+x_{3t} \\
+x_{4t} \\
+\end{bmatrix}}^{X_t} = \overbrace{\begin{bmatrix}
+a_{11} & a_{12} & a_{13} & a_{14}\\
+a_{21} & a_{22} & a_{23} & a_{24}\\
+a_{31} & a_{32} & a_{33} & a_{34}\\
+a_{41} & a_{42} & a_{43} & a_{44}\\
+\end{bmatrix}}^{A}\overbrace{\begin{bmatrix}
+x_{1(t-1)} \\
+x_{2(t-1)} \\
+x_{3(t-1)} \\
+x_{4(t-1)} \\
+\end{bmatrix}}^{X_{t-1}} + \overbrace{\begin{bmatrix}
+\epsilon_{1t} \\
+\epsilon_{2t} \\
+\epsilon_{3t} \\
+\epsilon_{4t} \\
+\end{bmatrix}}^{\epsilon_t}$$
+
+Or, even more convenient: $$X_t = AX_{t-1} + \epsilon_t$$ You will have to take my word for it that this represents the same system of equations as written earlier. If you don't, or feel particularly bored, you can try looking up the [Wikipedia page on matrix operations](https://en.wikipedia.org/wiki/Matrix_(mathematics)#Basic_operations) and confirm it for yourself!
+
+The vector $\epsilon_t$ is comprised of four random variables, each with a normal distribution. Another way of saying this is that $\epsilon_t$ is distributed according to a *multivariate* normal distribution with mean vector $(0,0,0,0)$ and covariance matrix $$\Sigma = \begin{bmatrix}
+\sigma_{11} & \sigma_{12} & \sigma_{13} & \sigma_{14}\\
+\sigma_{21} & \sigma_{22} & \sigma_{23} & \sigma_{24}\\
+\sigma_{31} & \sigma_{32} & \sigma_{33} & \sigma_{34}\\
+\sigma_{41} & \sigma_{42} & \sigma_{43} & \sigma_{44}\\
+\end{bmatrix}$$
+
+Note that when we include more lags in the model, we have multiple regression coefficient matrices. For example, a lag-3 model looks like this:
+
+$$X_t = A_1 X_{t-1} + A_2 X_{t-2} + A_3 X_{t-3} + \epsilon_t$$
+For the sake of easy exposition, we stick to the lag-1 model. The most important important sets of parameters of this model are
+
+ * $A$, the matrix of regression coefficients, representing the associations between specific items over time;
+ * $\Sigma$, the covariance matrix, representing variability of contemporaneous noise at each measurement.
+
+When we fit a VAR model, we are trying to find values for the elements of these matrices.
+
+## What is regularization?
+
+Before discussing regularization, we briefly reconsider the likelihood function and maximum likelihood estimation. Suppose we have a dataset of observations of independent variables $x_1$, $x_2$ and a response variable $y$. A simple linear regression model looks like this: $$y = ax_1 + bx_2 + \epsilon.$$ Maximum Likelihood Estimation (MLE) is a typical approach to estimating the model parameters $a, b$. Likelihood is a function of the model parameters and is defined as $L(a, b | X) = P(X | a, b)$, which means that the *likelihood of model parameters $a$ and $b$* is defined as the probability of observing the data $X$, given some values for $a$ and $b$. MLE finds estimations for the model parameters by calculating for which $a$ and $b$ the likelihood function is maximized.
+
+Now suppose that we have a regression problem where there are more variables in the model than there are observations. This is a problem, since there is not enough information available to estimate all the parameters in the model. In this case, it is hard or impossible to find the best value for $a$ and $b$ based on MLE, i.e. it is not possible to find values for $a$ and $b$ such that the likelihood function $L(a, b | X)$ is maximized. This is one of the prime examples where regularization saves the day. Instead of estimating the model parameters by maximizing the likelihood function, we add an extra term to the likelihood function: $$L_{\text{pen}}(a, b | X) = L(a,b|X) + \lambda \text{Pen}(a, b).$$ Here, *Pen* is short for **penalty**. This is a mathematical function that gets larger if the model parameters get bigger. 
+
+ - idea is that we can maximize this function instead of $L$
+ - its like adding 'extra information'
+ - there are many different penalty functions. some of of the most common are lasso, ridge regression, etc.
+ - these functions have different properties (L1 vs L2)
+ - $\lambda$ is an extra model parameter (hyperparameter) that we have to find a value for
+ - we now continue with regularization + VAR models
+
+## The SparseTSCGM package
