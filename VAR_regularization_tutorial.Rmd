@@ -4,8 +4,12 @@ author: "Stijn de Vos"
 date: "03 - 11 - 2017"
 output:
   html_document:
+    toc: true
     theme: cerulean
     highlight: tango
+  pdf_document:
+    highlight: tango
+    toc: true
 header-includes:
 - \usepackage{mathtools}
 - \usepackage{color}
@@ -73,13 +77,16 @@ When we fit a VAR model, we are trying to find values for the elements of these 
 
 Before discussing regularization, we briefly reconsider the likelihood function and maximum likelihood estimation. Suppose we have a dataset of observations of independent variables $x_1$, $x_2$ and a response variable $y$. A simple linear regression model looks like this: $$y = ax_1 + bx_2 + \epsilon.$$ Maximum Likelihood Estimation (MLE) is a typical approach to estimating the model parameters $a, b$. Likelihood is a function of the model parameters and is defined as $L(a, b | X) = P(X | a, b)$, which means that the *likelihood of model parameters $a$ and $b$* is defined as the probability of observing the data $X$, given some values for $a$ and $b$. MLE finds estimations for the model parameters by calculating for which $a$ and $b$ the likelihood function is maximized.
 
-Now suppose that we have a regression problem where there are more variables in the model than there are observations. This is a problem, since there is not enough information available to estimate all the parameters in the model. In this case, it is hard or impossible to find the best value for $a$ and $b$ based on MLE, i.e. it is not possible to find values for $a$ and $b$ such that the likelihood function $L(a, b | X)$ is maximized. This is one of the prime examples where regularization saves the day. Instead of estimating the model parameters by maximizing the likelihood function, we add an extra term to the likelihood function: $$L_{\text{pen}}(a, b | X) = L(a,b|X) + \lambda \text{Pen}(a, b).$$ Here, *Pen* is short for **penalty**. This is a mathematical function that gets larger if the model parameters get bigger. 
+Now suppose that we have a regression problem where there are more variables in the model than there are observations. This is a problem, since there is not enough information available to estimate all the parameters in the model. In this case, it is hard or impossible to find the best value for $a$ and $b$ based on MLE, i.e. it is not possible to find values for $a$ and $b$ such that the likelihood function $L(a, b | X)$ is maximized. This is one of the prime examples where regularization saves the day. Instead of estimating the model parameters by maximizing the likelihood function, we add an extra term to the likelihood function: $$L_{\text{pen}}(a, b | X) = L(a,b|X) + \lambda \text{Pen}(a, b).$$ Here, *Pen* is short for **penalty**. This is a mathematical function that gets larger if the model parameters get bigger. Another way of thinking about regularization in this context is that we add extra information that allows us to still estimate model parameters, namely, the information that the model parameters should not be 'too big'. What 'too big' means depends on the penalty function that is used. In any case, the model estimation procedure now continues as before; the estimates for parameters $a$ and $b$ are those numbers for which the penalized likelihood function is maximized.
 
- - idea is that we can maximize this function instead of $L$
- - its like adding 'extra information'
- - there are many different penalty functions. some of of the most common are lasso, ridge regression, etc.
+The number $\lambda$ is a parameter that expresses how importart or stringent the penalty function is. If $\lambda$ is large, then a small increase in penalty is amplified and the resulting estimators for model parameters $a, b$ are smaller. An immediate question is, then: how do we pick $\lambda$? It is a model parameter in the sense that we have to find a 'best' value for it. On the other hand, we are not really interested in a particular value for $\lambda$, we just want to pick it optimally so we can estimate $a$ and $b$. For this reason, $a$ and $b$ are sometimes in the literature referred to as *structural parameters* and $\lambda$ is referred to as a *nuisance parameter*. Some common methods for finding a good value for $\lambda$ are information-theoretical approaches such as AIC, BIC (as we'll see in the SparseTSCGM package) or cross-validation.
+
+### Examples of common regularization variants
+
+ - The **LASSO** (least absolute shrinkage and selection operator) operator: one of the most common regularization variants. It is named the LASSO because it performs shrinkage (another word for regularization) and it does so by considering the absolute values of model parameters. The penalty function here is defined as (sticking to our simple regression example) $$\text{Pen}(a,b) = |a| + |b|$$ In some technical literature you may see the notation $\text{Pen}(a,b) = ||\beta||_1$ (where $\beta$ represents all model parameters except $\lambda$) which is also known as the $L_1$ penalty.
+ - **Ridge regression**: here, the function is $$\text{Pen}(a,b) = \sqrt{a^2 + b^2}$$ which is also known as $\text{Pen}(a,b) = ||\beta||_2$, the $L_2$ penalty.
+ - Elastic-net regularization: this regularization method uses a combination of the previous two penalty functions : $$\text{Pen}(\beta) = $$
+
  - these functions have different properties (L1 vs L2)
- - $\lambda$ is an extra model parameter (hyperparameter) that we have to find a value for
- - we now continue with regularization + VAR models
 
 ## The SparseTSCGM package

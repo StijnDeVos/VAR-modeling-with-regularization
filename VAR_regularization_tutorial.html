@@ -107,6 +107,15 @@ $(document).ready(function () {
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#what-is-regularization">What is regularization?</a><ul>
+<li><a href="#examples-of-common-regularization-variants">Examples of common regularization variants</a></li>
+</ul></li>
+<li><a href="#the-sparsetscgm-package">The SparseTSCGM package</a></li>
+</ul>
+</div>
 
 <p>We start with a small review of vector-autoregressive models. Afterwards, regularization is discussed and the SparseTSCGM package is demonstrated.</p>
 <div id="introduction" class="section level2">
@@ -159,15 +168,17 @@ x_{4(t-1)} \\
 <div id="what-is-regularization" class="section level2">
 <h2>What is regularization?</h2>
 <p>Before discussing regularization, we briefly reconsider the likelihood function and maximum likelihood estimation. Suppose we have a dataset of observations of independent variables <span class="math inline">\(x_1\)</span>, <span class="math inline">\(x_2\)</span> and a response variable <span class="math inline">\(y\)</span>. A simple linear regression model looks like this: <span class="math display">\[y = ax_1 + bx_2 + \epsilon.\]</span> Maximum Likelihood Estimation (MLE) is a typical approach to estimating the model parameters <span class="math inline">\(a, b\)</span>. Likelihood is a function of the model parameters and is defined as <span class="math inline">\(L(a, b | X) = P(X | a, b)\)</span>, which means that the <em>likelihood of model parameters <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span></em> is defined as the probability of observing the data <span class="math inline">\(X\)</span>, given some values for <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>. MLE finds estimations for the model parameters by calculating for which <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> the likelihood function is maximized.</p>
-<p>Now suppose that we have a regression problem where there are more variables in the model than there are observations. This is a problem, since there is not enough information available to estimate all the parameters in the model. In this case, it is hard or impossible to find the best value for <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> based on MLE, i.e. it is not possible to find values for <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> such that the likelihood function <span class="math inline">\(L(a, b | X)\)</span> is maximized. This is one of the prime examples where regularization saves the day. Instead of estimating the model parameters by maximizing the likelihood function, we add an extra term to the likelihood function: <span class="math display">\[L_{\text{pen}}(a, b | X) = L(a,b|X) + \lambda \text{Pen}(a, b).\]</span> Here, <em>Pen</em> is short for <strong>penalty</strong>. This is a mathematical function that gets larger if the model parameters get bigger.</p>
+<p>Now suppose that we have a regression problem where there are more variables in the model than there are observations. This is a problem, since there is not enough information available to estimate all the parameters in the model. In this case, it is hard or impossible to find the best value for <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> based on MLE, i.e. it is not possible to find values for <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> such that the likelihood function <span class="math inline">\(L(a, b | X)\)</span> is maximized. This is one of the prime examples where regularization saves the day. Instead of estimating the model parameters by maximizing the likelihood function, we add an extra term to the likelihood function: <span class="math display">\[L_{\text{pen}}(a, b | X) = L(a,b|X) + \lambda \text{Pen}(a, b).\]</span> Here, <em>Pen</em> is short for <strong>penalty</strong>. This is a mathematical function that gets larger if the model parameters get bigger. Another way of thinking about regularization in this context is that we add extra information that allows us to still estimate model parameters, namely, the information that the model parameters should not be ‘too big’. What ‘too big’ means depends on the penalty function that is used. In any case, the model estimation procedure now continues as before; the estimates for parameters <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> are those numbers for which the penalized likelihood function is maximized.</p>
+<p>The number <span class="math inline">\(\lambda\)</span> is a parameter that expresses how importart or stringent the penalty function is. If <span class="math inline">\(\lambda\)</span> is large, then a small increase in penalty is amplified and the resulting estimators for model parameters <span class="math inline">\(a, b\)</span> are smaller. An immediate question is, then: how do we pick <span class="math inline">\(\lambda\)</span>? It is a model parameter in the sense that we have to find a ‘best’ value for it. On the other hand, we are not really interested in a particular value for <span class="math inline">\(\lambda\)</span>, we just want to pick it optimally so we can estimate <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>. For this reason, <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> are sometimes in the literature referred to as <em>structural parameters</em> and <span class="math inline">\(\lambda\)</span> is referred to as a <em>nuisance parameter</em>. Some common methods for finding a good value for <span class="math inline">\(\lambda\)</span> are information-theoretical approaches such as AIC, BIC (as we’ll see in the SparseTSCGM package) or cross-validation.</p>
+<div id="examples-of-common-regularization-variants" class="section level3">
+<h3>Examples of common regularization variants</h3>
 <ul>
-<li>idea is that we can maximize this function instead of <span class="math inline">\(L\)</span></li>
-<li>its like adding ‘extra information’</li>
-<li>there are many different penalty functions. some of of the most common are lasso, ridge regression, etc.</li>
-<li>these functions have different properties (L1 vs L2)</li>
-<li><span class="math inline">\(\lambda\)</span> is an extra model parameter (hyperparameter) that we have to find a value for</li>
-<li>we now continue with regularization + VAR models</li>
+<li>The <strong>LASSO</strong> (least absolute shrinkage and selection operator) operator: one of the most common regularization variants. It is named the LASSO because it performs shrinkage (another word for regularization) and it does so by considering the absolute values of model parameters. The penalty function here is defined as (sticking to our simple regression example) <span class="math display">\[\text{Pen}(a,b) = |a| + |b|\]</span> In some technical literature you may see the notation <span class="math display">\[\text{Pen}(a,b) = ||\beta||_1 \]</span></li>
+<li><strong>Ridge regression</strong>: here, the function is <span class="math display">\[\text{Pen}(a,b) = \sqrt{a^2 + b^2}\]</span></li>
+<li><p>GLMNET</p></li>
+<li><p>these functions have different properties (L1 vs L2)</p></li>
 </ul>
+</div>
 </div>
 <div id="the-sparsetscgm-package" class="section level2">
 <h2>The SparseTSCGM package</h2>
