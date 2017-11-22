@@ -13,6 +13,7 @@ output:
 header-includes:
 - \usepackage{mathtools}
 - \usepackage{color}
+bibliography: bibliography.bib
 ---
 
 We start with a small review of vector-autoregressive models. Afterwards, regularization is discussed and the SparseTSCGM package is demonstrated.
@@ -85,8 +86,51 @@ The number $\lambda$ is a parameter that expresses how importart or stringent th
 
  - The **LASSO** (least absolute shrinkage and selection operator) operator: one of the most common regularization variants. It is named the LASSO because it performs shrinkage (another word for regularization) and it does so by considering the absolute values of model parameters. The penalty function here is defined as (sticking to our simple regression example) $$\text{Pen}(a,b) = |a| + |b|$$ In some technical literature you may see the notation $\text{Pen}(a,b) = ||\beta||_1$ (where $\beta$ represents all model parameters except $\lambda$) which is also known as the $L_1$ penalty.
  - **Ridge regression**: here, the function is $$\text{Pen}(a,b) = \sqrt{a^2 + b^2}$$ which is also known as $\text{Pen}(a,b) = ||\beta||_2$, the $L_2$ penalty.
- - Elastic-net regularization: this regularization method uses a combination of the previous two penalty functions : $$\text{Pen}(\beta) = $$
+ - **Elastic-net regularization**: this regularization method uses a linear combination of the previous two penalty functions : $$\text{Pen}(\beta) = \lambda_1 ||\beta||_1 + \lambda_2 ||\beta||_2$$ and is thus a generalization of the previous regularization methods. If $\lambda_1 = 0$ then elastic-net regularization is just ridge regression, if $\lambda_2 = 0$ then we recover the LASSO penalty function. The R package *glmnet* implements elastic-net regularization, although the penalty is rewritten so that the method only has to consider a single regularization parameter instead of two. 
 
- - these functions have different properties (L1 vs L2)
+### Simple versus regularized regression
+
+As an illustration, here is vanilla linear regression versus regularized regression applied to a toy example:
+
+```{r message = FALSE}
+library(glmnet)
+
+# Not fake news, but fake data:
+x1 <- rnorm(100)
+x2 <- rnorm(100, mean = -1, sd = 3)*x1
+y <- 1 + x1 + 2*x2 + rnorm(100, sd = 2)
+data <- data.frame(x1 = x1, x2 = x2, y = y)
+pairs(data)
+
+# simple linear regression without regularization:
+simple_lm <- lm(y ~ x1 + x2)
+coefficients(simple_lm)
+
+# regression using elastic-net regularization:
+cv <- cv.glmnet(x = cbind(x1, x2), y = y)
+
+# This is the optimal value for lambda according to cross-validation:
+cv$lambda.min
+
+# fitting a penalized regression model using the optimal value for lambda:
+penalized_lm_opt <- glmnet(x = cbind(x1, x2), y, lambda = cv$lambda.min)
+coefficients(penalized_lm_opt)
+```
+
+We can see that in this case, the changes in estimated model parameters are minimal.
 
 ## The SparseTSCGM package
+
+The SparseTSCGM package [@abegaz2013sparse] combines VAR models with regularization. The main features of the package are the functions `sim.data()`, which simulates data according to a given network structure, and `sparse.tscgm()`, which fits the actual regularized VAR model. There is also a `print()`, `plot()` and `summary()` function for modeling results. 
+
+This package allows one to regularize the model in two different aspects. Firstly, it regularizes the matrix of regression coefficients ($A$ in the earlier example, $\Gamma$ in Abegaz et al.). Secondly, it regularizes the variance-covariance matrix of the contemporaneous errors. There is a small difference between this package and the VAR example above; instead of estimating the variance-covariance matrix $\Sigma$, it estimates its *inverse*, written $\Theta = \Sigma^{-1}$ (also known as the *precision matrix*). The reason for this is not directly related to this package. It turns out that, from a network perspective, $\Theta$ encodes the *conditional independence structure* of the variables in the model.
+
+ ---- (theta uitleggen?)
+
+ ---- Lets consider the arguments that `sparse.tscgm()` accepts.
+ 
+ ---- Toy example
+ 
+ ---- Impact of lambda on estimated networks.... use something animation-based
+
+# References
