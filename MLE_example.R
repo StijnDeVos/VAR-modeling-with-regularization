@@ -6,7 +6,7 @@ x2 = runif(N)
 y = 3 * x1 + 2 * x2 + rnorm(N)
 data <- data.frame(x1, x2, y)
 mod_example <- lm(y ~ x1 + x2 - 1, data = data)
-summary(mod_ex)
+summary(mod_example)
 
 X <- matrix(NA, ncol = 2, nrow = N)
 X[, 1] <- x1

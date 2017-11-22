@@ -73,4 +73,3 @@ When we fit a VAR model, we are trying to find values for the elements of these 
 Before discussing regularization, we briefly reconsider maximum likelihood estimation. Suppose we have a dataset of observations of independent variables $x_1$, $x_2$ and a response variable $y$. A simple linear regression model looks like this: $$y = ax_1 + bx_2 + \epsilon.$$ A typical approach to estimating the model parameters $a, b$ is Maximum Likelihood Estimation (MLE). Likelihood is a function of the model parameters and is defined as $L(a, b | X) = P(X | a, b)$, which means that the *likelihood of model parameters $a$ and $b$* is defined as the probability of observing the data $X$, given some values for $a$ and $b$. MLE finds estimations for the model parameters by calculating for which $a$ and $b$ the likelihood function is maximized. 
 
 ## The SparseTSCGM package
-
