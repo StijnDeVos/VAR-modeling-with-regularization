@@ -3,13 +3,13 @@ title: "VAR modeling, regularization and the SparseTSCGM package"
 author: "Stijn de Vos"
 date: "03 - 11 - 2017"
 output:
+  pdf_document:
+    highlight: tango
+    toc: true
   html_document:
     toc: true
     theme: cerulean
     highlight: tango
-  pdf_document:
-    highlight: tango
-    toc: true
 header-includes:
 - \usepackage{mathtools}
 - \usepackage{color}
@@ -18,7 +18,7 @@ bibliography: bibliography.bib
 
 We start with a small review of vector-autoregressive models. Afterwards, regularization is discussed and the SparseTSCGM package is demonstrated.
 
-## Introduction
+# Introduction
 
 Suppose we have four items called 'Positive Affect' ($x_1$), 'Anhedonia' ($x_2$), 'Irritability' ($x_3$) and 'Weightloss' ($x_4$). Measuring these items multiple times gives a time-series dataset where each observation consists of four elements. Written mathematically, the observation at time $t$ consists of four numbers $(x_{1t}, x_{2t}, x_{3t}, x_{4t})$. As a shorthand notation, people often write $X_t = (x_{1t}, x_{2t}, x_{3t}, x_{4t})$. $X_t$ is called a (four-dimensional) *vector*.
 
@@ -74,13 +74,13 @@ For the sake of easy exposition, we stick to the lag-1 model. The most important
 
 When we fit a VAR model, we are trying to find values for the elements of these matrices.
 
-## What is regularization?
+# What is regularization?
 
 Before discussing regularization, we briefly reconsider the likelihood function and maximum likelihood estimation. Suppose we have a dataset of observations of independent variables $x_1$, $x_2$ and a response variable $y$. A simple linear regression model looks like this: $$y = ax_1 + bx_2 + \epsilon.$$ Maximum Likelihood Estimation (MLE) is a typical approach to estimating the model parameters $a, b$. Likelihood is a function of the model parameters and is defined as $L(a, b | X) = P(X | a, b)$, which means that the *likelihood of model parameters $a$ and $b$* is defined as the probability of observing the data $X$, given some values for $a$ and $b$. MLE finds estimations for the model parameters by calculating for which $a$ and $b$ the likelihood function is maximized.
 
 Now suppose that we have a regression problem where there are more variables in the model than there are observations. This is a problem, since there is not enough information available to estimate all the parameters in the model. In this case, it is hard or impossible to find the best value for $a$ and $b$ based on MLE, i.e. it is not possible to find values for $a$ and $b$ such that the likelihood function $L(a, b | X)$ is maximized. This is one of the prime examples where regularization saves the day. Instead of estimating the model parameters by maximizing the likelihood function, we add an extra term to the likelihood function: $$L_{\text{pen}}(a, b | X) = L(a,b|X) + \lambda \text{Pen}(a, b).$$ Here, *Pen* is short for **penalty**. This is a mathematical function that gets larger if the model parameters get bigger. Another way of thinking about regularization in this context is that we add extra information that allows us to still estimate model parameters, namely, the information that the model parameters should not be 'too big'. What 'too big' means depends on the penalty function that is used. In any case, the model estimation procedure now continues as before; the estimates for parameters $a$ and $b$ are those numbers for which the penalized likelihood function is maximized.
 
-The number $\lambda$ is a parameter that expresses how importart or stringent the penalty function is. If $\lambda$ is large, then a small increase in penalty is amplified and the resulting estimators for model parameters $a, b$ are smaller. An immediate question is, then: how do we pick $\lambda$? It is a model parameter in the sense that we have to find a 'best' value for it. On the other hand, we are not really interested in a particular value for $\lambda$, we just want to pick it optimally so we can estimate $a$ and $b$. For this reason, $a$ and $b$ are sometimes in the literature referred to as *structural parameters* and $\lambda$ is referred to as a *nuisance parameter*. Some common methods for finding a good value for $\lambda$ are information-theoretical approaches such as AIC, BIC (as we'll see in the SparseTSCGM package) or cross-validation.
+The number $\lambda$ is a parameter that expresses how importart or stringent the penalty function is. If $\lambda$ is large, then a small increase in penalty is amplified and the resulting estimators for model parameters $a, b$ are smaller. An immediate question is, then: how do we pick $\lambda$? It is a model parameter in the sense that we have to find a 'best' value for it. On the other hand, we are not really interested in a particular value for $\lambda$, we just want to pick it optimally so we can estimate $a$ and $b$. For this reason, $a$ and $b$ are sometimes in the literature referred to as *structural parameters* and $\lambda$ is referred to as a *nuisance parameter*. Another term is 'hyperparameter'. Some common methods for finding a good value for $\lambda$ are information-theoretical approaches such as AIC, BIC (as we'll see in the SparseTSCGM package) or cross-validation.
 
 ### Examples of common regularization variants
 
@@ -119,18 +119,62 @@ coefficients(penalized_lm_opt)
 
 We can see that in this case, the changes in estimated model parameters are minimal.
 
-## The SparseTSCGM package
+# The SparseTSCGM package
 
-The SparseTSCGM package [@abegaz2013sparse] combines VAR models with regularization. The main features of the package are the functions `sim.data()`, which simulates data according to a given network structure, and `sparse.tscgm()`, which fits the actual regularized VAR model. There is also a `print()`, `plot()` and `summary()` function for modeling results. 
+The SparseTSCGM package [@abegaz2013sparse] combines VAR models with regularization. The main features of the package are the functions `sparse.tscgm()`, which fits the actual regularized VAR model, and `sim.data()` which simulates data according to a given network structure. There is also a `print()`, `plot()` and `summary()` function for modeling results. 
 
-This package allows one to regularize the model in two different aspects. Firstly, it regularizes the matrix of regression coefficients ($A$ in the earlier example, $\Gamma$ in Abegaz et al.). Secondly, it regularizes the variance-covariance matrix of the contemporaneous errors. There is a small difference between this package and the VAR example above; instead of estimating the variance-covariance matrix $\Sigma$, it estimates its *inverse*, written $\Theta = \Sigma^{-1}$ (also known as the *precision matrix*). The reason for this is not directly related to this package. It turns out that, from a network perspective, $\Theta$ encodes the *conditional independence structure* of the variables in the model.
+This package allows one to regularize a VAR model in two different aspects. Firstly, it regularizes the matrix of regression coefficients ($A$ in the earlier example, $\Gamma$ in Abegaz et al.). Secondly, it regularizes the variance-covariance matrix of the contemporaneous errors. There is a small difference between this package and the VAR example above; instead of estimating the variance-covariance matrix $\Sigma$, it estimates its *inverse*, written $\Theta = \Sigma^{-1}$ (also known as the *precision matrix*). The reason for this is not directly related to this package. It turns out that, from a network perspective, $\Theta$ encodes the *conditional independence structure* of the variables in the model. For a technical exposition, see e.g. @lauritzen1996graphical. It doesn't really matter though; one can always invert the precision matrix to obtain the variance-covariance matrix, or transform it to a partial correlation matrix.
 
- ---- (theta uitleggen?)
+### Usage
 
- ---- Lets consider the arguments that `sparse.tscgm()` accepts.
+The function `sparse.tscgm()` accepts the following arguments:
+
+ - `data`: the data to which the VAR model is fitted.
+ - `lam1`: the hyperparameter for the regularization of the precision matrix of the contemporaneous noise. The default value is `NULL`, which means that the program generates a sequence of possible values and tries to find the optimal value according to the `optimality` argument.
+ - `lam2`: the hyperparameter for the regularization of the regression coefficient matrix. The default is `NULL`, with the same behaviour as `lam1`.
+ - `nlambda`: determines the length of the generated sequence of possible hyperparameter values if `lam1` or `lam2` is `NULL`, 
+ - `model`: valid choices are `ar1` (the default setting) for a lag-1 model or `ar2` for a lag-2 model. Higher lags are not supported at the moment.
+ - `penalty`: selects the penalty function that is used for the precision and regression coefficient matrix. Possible choices are `lasso` for the LASSO penalty function and `scad` (Smoothly Clipped Absolute Deviation, the default setting), another penalty function.
+ - `optimality`: determines by which information-theoretical measure the hyperparameters `lam1` and `lam2` should be selected. Possible choices are `aic`, `bic`, `bic_ext` (extended Bayesian Information Criterium), `bic_mod` (Modified Bayesian Information Criterium), `gic` (Generalized Information Criteria). It can also be `NULL`, in this case the program expects two values for `lam1` and `lam2`.
+ - `control`: accepts an optional list of settings for the technical, behind-the-scenes estimation procedure (not discussed here).
  
- ---- Toy example
- 
- ---- Impact of lambda on estimated networks.... use something animation-based
+An obvious question is why one would choose one penalty function over the other. Unfortunately, it is pretty hard to give a one-size-fits-all answer to this question. Each penalty function has its technical advantages and downsides. Luckily, the result usually does not differ too much for different penalty functions (but you should always confirm this is the case).
 
+The following example comes from the help pages (type `?sparse.tscgm` in the R console to find it).
+
+```{r}
+library(SparseTSCGM)
+library(qgraph)
+# generate data for 10 timepoints, 10 observations and 5 variables according to a lag-1 model with a random network structure:
+datas <- sim.data(model="ar1", time=10, n.obs=10, n.var=7, prob0=0.35, network="random") 
+data.fit <-  datas$data1 # the simulated data
+prec_true <- datas$theta # true precision matrix
+regr_true <- datas$gamma # true regression coefficient matrix
+    
+# Fit a penalized VAR model with the lasso penalty function and the BIC
+res.tscgm <- sparse.tscgm(data = data.fit, lam1 = NULL, lam2 = NULL, nlambda = NULL, 
+                          model = "ar1", penalty = "lasso", optimality = "bic", 
+                          control = list(maxit.out = 10, maxit.in = 100))
+# Note: running the line above will generate a lot of output in the console, I've manually removed it from this document.
+
+# Estimated precision and regression matrices
+prec <- res.tscgm$theta
+regr <- res.tscgm$gamma
+
+# Visual comparison of the true and estimated regression matrices:
+par(mfrow = c(1, 2))
+qgraph(regr_true, title = 'True longitudinal associations', layout = 'circle')
+qgraph(regr, title = 'Estimated longitudinal associations', layout = 'circle')
+par(mfrow = c(1, 1))
+```
+
+### Hyperparameters and network sparsity
+
+
+
+### Possible alternative
+
+GraphicalVAR
+
+### Conclusion
 # References
