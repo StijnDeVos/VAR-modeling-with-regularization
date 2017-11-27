@@ -1,0 +1,12 @@
+```{r}
+library(SparseTSCGM)
+
+sink('NUL')
+datas <- sim.data(model="ar1", time=10,n.obs=10, n.var=5, prob0=0.35,
+                  network="random")
+res.tscgm <- sparse.tscgm(data=datas$data, lam1=NULL, lam2=NULL, nlambda=NULL, 
+                          model="ar1", penalty="scad",optimality="bic_mod",control=list(maxit.out = 5, maxit.in = 5))
+sink()
+
+```
+

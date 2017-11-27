@@ -3,13 +3,13 @@ title: "VAR modeling, regularization and the SparseTSCGM package"
 author: "Stijn de Vos"
 date: "03 - 11 - 2017"
 output:
-  pdf_document:
-    highlight: tango
-    toc: true
   html_document:
     toc: true
     theme: cerulean
     highlight: tango
+  pdf_document:
+    highlight: tango
+    toc: true
 header-includes:
 - \usepackage{mathtools}
 - \usepackage{color}
@@ -82,7 +82,13 @@ Now suppose that we have a regression problem where there are more variables in 
 
 The number $\lambda$ is a parameter that expresses how importart or stringent the penalty function is. If $\lambda$ is large, then a small increase in penalty is amplified and the resulting estimators for model parameters $a, b$ are smaller. An immediate question is, then: how do we pick $\lambda$? It is a model parameter in the sense that we have to find a 'best' value for it. On the other hand, we are not really interested in a particular value for $\lambda$, we just want to pick it optimally so we can estimate $a$ and $b$. For this reason, $a$ and $b$ are sometimes in the literature referred to as *structural parameters* and $\lambda$ is referred to as a *nuisance parameter*. Another term is 'hyperparameter'. Some common methods for finding a good value for $\lambda$ are information-theoretical approaches such as AIC, BIC (as we'll see in the SparseTSCGM package) or cross-validation.
 
-### Examples of common regularization variants
+One could ask: ``why would you want to regularize?'' Here are some general (non-exhaustive) reasons for doing so:
+
+ - if you have more parameters in your model than you have datapoints. In this case, the vanilla/standard estimation procedures may break down and you have to regularize in order to estimate a model at all;
+ - if you believe that there is reason to believe that model parameters should not be too big, e.g. if there is theoretical grounds to do so;
+ - if you want to facilitate model interpretability.
+
+s### Examples of common regularization variants
 
  - The **LASSO** (least absolute shrinkage and selection operator) operator: one of the most common regularization variants. It is named the LASSO because it performs shrinkage (another word for regularization) and it does so by considering the absolute values of model parameters. The penalty function here is defined as (sticking to our simple regression example) $$\text{Pen}(a,b) = |a| + |b|$$ In some technical literature you may see the notation $\text{Pen}(a,b) = ||\beta||_1$ (where $\beta$ represents all model parameters except $\lambda$) which is also known as the $L_1$ penalty.
  - **Ridge regression**: here, the function is $$\text{Pen}(a,b) = \sqrt{a^2 + b^2}$$ which is also known as $\text{Pen}(a,b) = ||\beta||_2$, the $L_2$ penalty.
@@ -142,7 +148,8 @@ An obvious question is why one would choose one penalty function over the other.
 
 The following example comes from the help pages (type `?sparse.tscgm` in the R console to find it).
 
-```{r}
+```{r message=FALSE}
+
 library(SparseTSCGM)
 library(qgraph)
 # generate data for 10 timepoints, 10 observations and 5 variables according to a lag-1 model with a random network structure:
@@ -168,13 +175,22 @@ qgraph(regr, title = 'Estimated longitudinal associations', layout = 'circle')
 par(mfrow = c(1, 1))
 ```
 
-### Hyperparameters and network sparsity
+### Possible alternative: GraphicalVAR
 
+GraphicalVAR is another R package that implements a VAR model with regularization. According to its help page (see `?graphicalVAR` in R), it uses the same estimation procedure as SparseTSCGM and in fact references [abegaz2013sparse]. 
 
+The differences between SparseTSCGM and GraphicalVAR are the following:
 
-### Possible alternative
+ - graphicalVAR only uses the LASSO penalty function;
+ - the only hyperparameter selecture procedure that is implemented is EBIC, the Extended Bayesian Information Criterium.
+ - graphicalVAR includes options for whether or not to regularize the diagonal elements of the regression coefficient matrix and for handling of ESM data.
+ - it seems that it is possible to use more lags than 2 (but I have not tested this thoroughly);
+ - graphicalVAR seems to be a bit more well-designed than SparseTSCGM. For example, fitting a model with graphicalVAR doesn't output a long list of information to the R console (which is hard to suppress and can be annoying when making a tutorial like this).
+ 
+ In short: graphicalVAR might be preferable if you're sure you want to use the LASSO penalty function and you're not interested in information criteria other than the EBIC.
 
-GraphicalVAR
+# Conclusion
 
-### Conclusion
+Regularization and VAR models are not hard to do in R. The hardest part about this type of modeling is being happy with the choices you have to make, such as penalty functions, model selection procedure, etcetera. Does this tutorial not make sense at all, or do you miss a certain topic? Please let me know! 
+
 # References
