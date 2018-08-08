@@ -1,6 +1,6 @@
 library(glmnet)
 
-# Not fake news, but fake data:
+# Some fake data:
 x1 <- rnorm(100)
 x2 <- rnorm(100, mean = -1, sd = 3)*x1
 y <- 1 + x1 + 2*x2 + rnorm(100, sd = 2)
